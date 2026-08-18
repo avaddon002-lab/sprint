@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Спринт — RSVP-читалка: загрузите PDF, EPUB, FB2 или DOCX и читайте со скоростью до 1200 слов в минуту." />
+    <title>Спринт — скорочтение по словам</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23F5B841'/%3E%3Cpath d='M18.5 5 8 18h6l-1.5 9L23 14h-6l1.5-9z' fill='%230C1210'/%3E%3C/svg%3E" />
+    <style>
+      html, body { margin: 0; padding: 0; background: #0c1210; }
+      #boot { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+      #boot .dot { width: 10px; height: 10px; border-radius: 50%; background: #f5b841; margin: 0 5px; animation: bp 1s infinite ease-in-out; }
+      #boot .dot:nth-child(2) { animation-delay: 0.15s; }
+      #boot .dot:nth-child(3) { animation-delay: 0.3s; }
+      @keyframes bp { 0%, 100% { opacity: 0.25; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1); } }
+    </style>
+  </head>
+  <body>
+    <div id="root"><div id="boot"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Boot watchdog. This file doubles as the Vite build template:
+      //  • in the repo root it references /src/main.tsx and only works under
+      //    `npm run dev` — if opened directly, we redirect to ./dist/index.html;
+      //  • in the built dist/ page (no /src/ scripts) it instead shows a
+      //    diagnostic naming the resource the browser failed to fetch.
+      (function () {
+        var shown = false;
+        function fail(msg) {
+          if (shown) return;
+          shown = true;
+          var root = document.getElementById("root");
+          if (root) {
+            root.innerHTML =
+              '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#e9f1ea;padding:24px;text-align:center"><div style="max-width:480px">' +
+              '<div style="font-weight:800;font-size:20px;margin-bottom:10px">Спринт не смог загрузиться</div>' +
+              '<div style="color:#8fa396;font-size:14px;line-height:1.6">' + msg + "</div></div></div>";
+          }
+        }
+        // only the dev-source page contains a /src/ module reference
+        function isDevSource() {
+          return !!document.querySelector('script[src^="/src/"]');
+        }
+        function redirectOrDiagnose(res) {
+          if (document.getElementById("boot")) {
+            if (isDevSource()) {
+              window.location.replace("./dist/index.html" + window.location.hash);
+            } else {
+              fail(
+                "Браузер не смог загрузить файл: " + res +
+                '<br>Убедитесь, что на сервер скопирована вся папка <b>dist</b> (index.html вместе с папкой assets), а сервер отдаёт файлы с типами .js и .css.'
+              );
+            }
+          }
+        }
+        window.addEventListener(
+          "error",
+          function (e) {
+            var el = e.target;
+            if (el && (el.tagName === "SCRIPT" || el.tagName === "LINK")) {
+              redirectOrDiagnose(el.src || el.href || "неизвестный ресурс");
+            }
+          },
+          true
+        );
+        window.addEventListener("load", function () {
+          setTimeout(function () {
+            if (!document.getElementById("boot")) return; // app rendered fine
+            if (isDevSource()) {
+              window.location.replace("./dist/index.html" + window.location.hash);
+            } else {
+              fail("Приложение не ответило. Обновите страницу (Ctrl+R / Cmd+R).");
+            }
+          }, 5000);
+        });
+      })();
+    </script>
+    <noscript>
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;color:#e9f1ea;font-family:sans-serif">
+        Готовое приложение находится в папке <b style="margin:0 6px">dist/</b> — откройте dist/index.html.
+      </div>
+    </noscript>
+  </body>
+</html>
